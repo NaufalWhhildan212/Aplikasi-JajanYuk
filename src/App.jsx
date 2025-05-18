@@ -1,15 +1,7 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Image,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import React, { useState } from 'react';
 
-// Map kategori ke ikon gambar
+import {View,Text,TextInput,Image,StyleSheet,ScrollView,TouchableOpacity,} from 'react-native';
+
 const categoryIcons = {
   restoran: require('./assets/image/Restoran.png'),
   tren: require('./assets/image/Tren.png'),
@@ -18,16 +10,31 @@ const categoryIcons = {
 };
 
 export default function App() {
+  const FavoriteItem = ({ imageSource, title }) => (
+    <View style={styles.favoriteItem}>
+      <Image source={imageSource} style={styles.favoriteImage} />
+      <Text style={styles.favoriteText}>{title}</Text>
+    </View>
+  );
+  const [favorites, setFavorites] = useState([
+    { id: 1, title: 'Dimsum Mentai', image: require('./assets/image/Favorit1.jpeg') },
+    { id: 2, title: 'Bakso', image: require('./assets/image/Favorit2.jpeg') },
+    { id: 3, title: 'Pecel', image: require('./assets/image/Favorit3.jpg') },
+    { id: 4, title: 'Mie Goreng', image: require('./assets/image/Favorit4.jpg') },
+  ]);
   return (
     <View style={styles.wrapper}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerText}>Jajan Yukk !!</Text>
         </View>
 
         {/* Banner */}
-        <Image source={require('./assets/image/Banner.jpg')} style={styles.banner} />
+        <Image
+          source={require('./assets/image/Banner.jpg')}
+          style={styles.banner}
+        />
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>
@@ -50,21 +57,44 @@ export default function App() {
           ))}
         </View>
 
-        {/* Favorit */}
         <Text style={styles.subTitle}>Favorit</Text>
-        <View style={styles.favorites}>
-          <Image source={require('./assets/image/Favorit1.jpeg')} style={styles.favoriteImage} />
-          <Image source={require('./assets/image/Favorit2.jpeg')} style={styles.favoriteImage} />
-        </View>
+
+{favorites.reduce((rows, item, idx) => {
+  if (idx % 2 === 0) rows.push([item]);
+  else rows[rows.length - 1].push(item);
+  return rows;
+}, []).map((row, i) => (
+  <View key={i} style={styles.favorites}>
+    {row.map((fav) => (
+      <FavoriteItem
+        key={fav.id}
+        imageSource={fav.image}
+        title={fav.title}
+      />
+    ))}
+  </View>
+))}
       </ScrollView>
 
       {/* Bottom Menu */}
       <View style={styles.bottomMenu}>
         <TouchableOpacity>
-          <Image source={require('./assets/icon/notif.jpg')} style={styles.bottomIcon} />
+          <Image
+            source={require('./assets/icon/notif.jpg')}
+            style={styles.bottomIcon}
+          />
         </TouchableOpacity>
         <TouchableOpacity>
-          <Image source={require('./assets/icon/Home.png')} style={styles.bottomIcon} />
+          <Image
+            source={require('./assets/icon/Home.png')}
+            style={styles.bottomIcon}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Image
+            source={require('./assets/icon/User.png')}
+            style={styles.bottomIcon}
+          />
         </TouchableOpacity>
       </View>
     </View>
@@ -74,16 +104,13 @@ export default function App() {
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: '#FFA500', // Orange background
+    backgroundColor: '#FFA500',
   },
   container: {
     flex: 1,
     padding: 16,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 16,
   },
   headerText: {
@@ -136,12 +163,22 @@ const styles = StyleSheet.create({
   favorites: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 80,
+    marginBottom: 16,
+  },
+  favoriteItem: {
+    width: '48%',
+    alignItems: 'center',
   },
   favoriteImage: {
-    width: '48%',
+    width: '100%',
     height: 120,
     borderRadius: 12,
+  },
+  favoriteText: {
+    marginTop: 6,
+    fontSize: 14,
+    color: '#fff',
+    textAlign: 'center',
   },
   bottomMenu: {
     flexDirection: 'row',
