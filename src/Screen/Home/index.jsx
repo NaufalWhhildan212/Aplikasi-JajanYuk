@@ -1,27 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  Image,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
+import { categories, favoriteFoods } from '../../data'; // import dari data.jsx
 
-import {View,Text,TextInput,Image,StyleSheet,ScrollView,TouchableOpacity,} from 'react-native';
-
-const categoryIcons = {
-  restoran: require('./assets/image/Restoran.png'),
-  tren: require('./assets/image/Tren.png'),
-  Rekomendasi: require('./assets/image/Rekomendasi.png'),
-  cemilan: require('./assets/image/Snack.png'),
-};
-
-export default function App() {
-  const FavoriteItem = ({ imageSource, title }) => (
-    <View style={styles.favoriteItem}>
-      <Image source={imageSource} style={styles.favoriteImage} />
-      <Text style={styles.favoriteText}>{title}</Text>
-    </View>
-  );
-  const [favorites, setFavorites] = useState([
-    { id: 1, title: 'Dimsum Mentai', image: require('./assets/image/Favorit1.jpeg') },
-    { id: 2, title: 'Bakso', image: require('./assets/image/Favorit2.jpeg') },
-    { id: 3, title: 'Pecel', image: require('./assets/image/Favorit3.jpg') },
-    { id: 4, title: 'Mie Goreng', image: require('./assets/image/Favorit4.jpg') },
-  ]);
+export default function Home() {
   return (
     <View style={styles.wrapper}>
       <ScrollView style={styles.container}>
@@ -32,7 +21,7 @@ export default function App() {
 
         {/* Banner */}
         <Image
-          source={require('./assets/image/Banner.jpg')}
+          source={require('../../assets/image/Banner.jpg')}
           style={styles.banner}
         />
 
@@ -47,52 +36,45 @@ export default function App() {
 
         {/* Kategori */}
         <View style={styles.categories}>
-          {['restoran', 'tren', 'Rekomendasi', 'cemilan'].map((item) => (
-            <View key={item} style={styles.categoryItem}>
-              <Image source={categoryIcons[item]} style={styles.icon} />
-              <Text style={styles.categoryText}>
-                {item.charAt(0).toUpperCase() + item.slice(1)}
-              </Text>
+          {categories.map((item) => (
+            <View key={item.id} style={styles.categoryItem}>
+              <Image source={item.icon} style={styles.icon} />
+              <Text style={styles.categoryText}>{item.label}</Text>
             </View>
           ))}
         </View>
 
+        {/* Favorit */}
         <Text style={styles.subTitle}>Favorit</Text>
 
-{favorites.reduce((rows, item, idx) => {
-  if (idx % 2 === 0) rows.push([item]);
-  else rows[rows.length - 1].push(item);
-  return rows;
-}, []).map((row, i) => (
-  <View key={i} style={styles.favorites}>
-    {row.map((fav) => (
-      <FavoriteItem
-        key={fav.id}
-        imageSource={fav.image}
-        title={fav.title}
-      />
-    ))}
-  </View>
-))}
+        {/* Render 2 per baris */}
+        <View style={styles.favoritesContainer}>
+          {favoriteFoods.map((item, index) => (
+            <View key={item.id} style={styles.favoriteItem}>
+              <Image source={item.image} style={styles.favoriteImage} />
+              <Text style={styles.favoriteText}>{item.name}</Text>
+            </View>
+          ))}
+        </View>
       </ScrollView>
 
       {/* Bottom Menu */}
       <View style={styles.bottomMenu}>
         <TouchableOpacity>
           <Image
-            source={require('./assets/icon/notif.jpg')}
+            source={require('../../assets/icon/notif.jpg')}
             style={styles.bottomIcon}
           />
         </TouchableOpacity>
         <TouchableOpacity>
           <Image
-            source={require('./assets/icon/Home.png')}
+            source={require('../../assets/icon/Home.png')}
             style={styles.bottomIcon}
           />
         </TouchableOpacity>
         <TouchableOpacity>
           <Image
-            source={require('./assets/icon/User.png')}
+            source={require('../../assets/icon/User.png')}
             style={styles.bottomIcon}
           />
         </TouchableOpacity>
@@ -160,13 +142,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     color: '#fff',
   },
-  favorites: {
+  favoritesContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 80,
   },
   favoriteItem: {
     width: '48%',
+    marginBottom: 16,
     alignItems: 'center',
   },
   favoriteImage: {
