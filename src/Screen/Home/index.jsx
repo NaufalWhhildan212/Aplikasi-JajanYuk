@@ -1,16 +1,9 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Image,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
+import {View,Text,TextInput,Image,StyleSheet,ScrollView,TouchableOpacity,
 } from 'react-native';
 import { categories, favoriteFoods } from '../../data'; // import dari data.jsx
 
-export default function Home() {
+export default function Home({ navigation }) {  // Menambahkan props navigation
   return (
     <View style={styles.wrapper}>
       <ScrollView style={styles.container}>
@@ -37,10 +30,14 @@ export default function Home() {
         {/* Kategori */}
         <View style={styles.categories}>
           {categories.map((item) => (
-            <View key={item.id} style={styles.categoryItem}>
+            <TouchableOpacity
+              key={item.id}
+              style={styles.categoryItem}
+              onPress={() => navigation.navigate('Restoran', { categoryId: item.id })}  // Navigasi ke Restoran dengan kategori
+            >
               <Image source={item.icon} style={styles.icon} />
               <Text style={styles.categoryText}>{item.label}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
@@ -50,35 +47,17 @@ export default function Home() {
         {/* Render 2 per baris */}
         <View style={styles.favoritesContainer}>
           {favoriteFoods.map((item, index) => (
-            <View key={item.id} style={styles.favoriteItem}>
+            <TouchableOpacity
+              key={item.id}
+              style={styles.favoriteItem}
+              onPress={() => navigation.navigate('BlogDetail', { foodId: item.id })}  // Navigasi ke BlogDetail dengan ID makanan
+            >
               <Image source={item.image} style={styles.favoriteImage} />
               <Text style={styles.favoriteText}>{item.name}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       </ScrollView>
-
-      {/* Bottom Menu */}
-      <View style={styles.bottomMenu}>
-        <TouchableOpacity>
-          <Image
-            source={require('../../assets/icon/notif.jpg')}
-            style={styles.bottomIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image
-            source={require('../../assets/icon/Home.png')}
-            style={styles.bottomIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Image
-            source={require('../../assets/icon/User.png')}
-            style={styles.bottomIcon}
-          />
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }

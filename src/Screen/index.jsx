@@ -2,3 +2,6 @@ export { default as Home } from './Home';
 export { default as Restoran } from './Restoran';
 export { default as Profile } from './Profile';
 export { default as EditProfile } from './EditProfile';
+export { default as Ulasan } from './Ulasan';
+export { default as TambahUlasan } from './TambahUlasan';
+export { default as Notification } from './Notification';

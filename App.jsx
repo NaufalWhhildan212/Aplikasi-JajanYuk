@@ -1,8 +1,10 @@
 import * as React from 'react';
-import { Home,Restoran, Profile,EditProfile } from './src/Screen'
-
+import { NavigationContainer } from '@react-navigation/native';
+import Router from './src/Navigation/Router';
 export default function App() {
-    return (
-      <Restoran/>
+  return (
+    <NavigationContainer>
+     <Router/>
+    </NavigationContainer>
   );
 }

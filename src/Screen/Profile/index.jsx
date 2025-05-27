@@ -1,10 +1,27 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-
-// Ganti dengan path gambar avatar Anda
-import avatarImage from '../../assets/icon/Avatar.png';  // Ganti dengan path gambar avatar Anda
+import { View, Text, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import avatarImage from '../../assets/icon/Avatar.png'; // Pastikan path-nya benar
 
 export default function Profile({ navigation }) {
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Konfirmasi',
+      'Apakah Anda yakin ingin logout?',
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Logout',
+          onPress: () => {
+            // Logika logout, bisa diarahkan ke halaman login atau Home
+            navigation.navigate('Home');
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
     <View style={styles.container}>
       {/* Tombol Kembali */}
@@ -21,13 +38,31 @@ export default function Profile({ navigation }) {
 
       {/* Menu */}
       <View style={styles.menu}>
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('EditProfile')}
+        >
           <Text style={styles.menuText}>Edit profile information</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('History')}
+        >
           <Text style={styles.menuText}>History</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('Ulasan')}
+        >
+          <Text style={styles.menuText}>Ulasan</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={handleLogout}
+        >
           <Text style={styles.menuText}>Log out</Text>
         </TouchableOpacity>
       </View>
@@ -38,7 +73,7 @@ export default function Profile({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFA500',  // Latar belakang oranye untuk seluruh halaman
+    backgroundColor: '#FFA500',
     padding: 16,
   },
   backButton: {
@@ -47,19 +82,19 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontSize: 50,
-    color: '#fff',  // Warna putih untuk tombol kembali
+    color: '#fff',
   },
   profileSection: {
     alignItems: 'center',
     marginBottom: 40,
-    backgroundColor: '#fff', // Background putih untuk bagian profile
+    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 12,
     shadowColor: '#FFA500',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
-    elevation: 5, // Menambahkan bayangan untuk kesan modern
+    elevation: 5,
   },
   avatar: {
     width: 100,
@@ -67,31 +102,32 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     marginBottom: 10,
     borderWidth: 2,
-    borderColor: '#FFA500', // Border oranye pada avatar
+    borderColor: '#FFA500',
   },
   name: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#FFA500',  // Warna oranye pada nama
+    color: '#FFA500',
   },
   email: {
     fontSize: 14,
     color: '#666',
     marginTop: 5,
+    textAlign: 'center',
   },
   menu: {
     marginTop: 20,
   },
   menuItem: {
     padding: 15,
-    backgroundColor: '#fff',  // Latar belakang putih untuk item menu
+    backgroundColor: '#fff',
     marginBottom: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#FFA500',  // Border oranye pada item menu
+    borderColor: '#FFA500',
   },
   menuText: {
     fontSize: 16,
-    color: '#333', // Warna teks menu yang kontras dengan background putih
+    color: '#333',
   },
 });
