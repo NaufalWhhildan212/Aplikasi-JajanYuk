@@ -1,19 +1,37 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {View,Text,TextInput,Image,StyleSheet,ScrollView,TouchableOpacity,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import * as Animatable from 'react-native-animatable';
 import { categories, favoriteFoods } from '../../data'; // import dari data.jsx
 
-export default function Home({ navigation }) {  // Menambahkan props navigation
+export default function Home({ navigation }) {
+  const headerRef = useRef(null);
+  const bannerRef = useRef(null);
+  const categoryRef = useRef(null);
+  const favoriteRef = useRef(null);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Trigger animasi saat halaman difokuskan
+      headerRef.current?.fadeInDown(800);
+      bannerRef.current?.fadeIn(1000);
+      categoryRef.current?.fadeInUp(1000);
+      favoriteRef.current?.fadeInUp(1000);
+    }, [])
+  );
+
   return (
     <View style={styles.wrapper}>
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
+        <Animatable.View ref={headerRef}>
           <Text style={styles.headerText}>Jajan Yukk !!</Text>
-        </View>
+        </Animatable.View>
 
         {/* Banner */}
-        <Image
+        <Animatable.Image
+          ref={bannerRef}
           source={require('../../assets/image/Banner.jpg')}
           style={styles.banner}
         />
@@ -28,35 +46,34 @@ export default function Home({ navigation }) {  // Menambahkan props navigation
         </View>
 
         {/* Kategori */}
-        <View style={styles.categories}>
+        <Animatable.View ref={categoryRef} style={styles.categories}>
           {categories.map((item) => (
             <TouchableOpacity
               key={item.id}
               style={styles.categoryItem}
-              onPress={() => navigation.navigate('Restoran', { categoryId: item.id })}  // Navigasi ke Restoran dengan kategori
+              onPress={() => navigation.navigate('Restoran', { categoryId: item.id })}
             >
               <Image source={item.icon} style={styles.icon} />
               <Text style={styles.categoryText}>{item.label}</Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </Animatable.View>
 
         {/* Favorit */}
         <Text style={styles.subTitle}>Favorit</Text>
 
-        {/* Render 2 per baris */}
-        <View style={styles.favoritesContainer}>
-          {favoriteFoods.map((item, index) => (
+        <Animatable.View ref={favoriteRef} style={styles.favoritesContainer}>
+          {favoriteFoods.map((item) => (
             <TouchableOpacity
               key={item.id}
               style={styles.favoriteItem}
-              onPress={() => navigation.navigate('BlogDetail', { foodId: item.id })}  // Navigasi ke BlogDetail dengan ID makanan
+              onPress={() => navigation.navigate('BlogDetail', { foodId: item.id })}
             >
               <Image source={item.image} style={styles.favoriteImage} />
               <Text style={styles.favoriteText}>{item.name}</Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </Animatable.View>
       </ScrollView>
     </View>
   );
@@ -71,13 +88,11 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  header: {
-    marginBottom: 16,
-  },
   headerText: {
     fontSize: 26,
     fontWeight: 'bold',
     color: '#fff',
+    marginBottom: 16,
   },
   banner: {
     width: '100%',
@@ -142,23 +157,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#fff',
     textAlign: 'center',
-  },
-  bottomMenu: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 14,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    elevation: 10,
-  },
-  bottomIcon: {
-    width: 28,
-    height: 28,
   },
 });

@@ -11,7 +11,7 @@ const Stack = createStackNavigator();
 
 const icons = {
   home: require('../assets/icon/Home.png'),
-  notification: require('../assets/icon/notif.jpg'),
+  notification: require('../assets/icon/notif.png'),
   profile: require('../assets/icon/User.png'),
 };
 
@@ -20,7 +20,7 @@ function MainApp() {
     <Tab.Navigator
       screenOptions={{
         tabBarHideOnKeyboard: true,
-        tabBarActiveTintColor: colors.greenMint(),
+        tabBarActiveTintColor: colors.darkModeOrange(),
         tabBarInactiveTintColor: colors.black(),
         tabBarStyle: {
           paddingBottom: 10,
@@ -39,10 +39,11 @@ function MainApp() {
         component={Notification}
         options={{
           tabBarLabel: 'Notification',
+          tabBarLabelStyle :{ fontSize: 14 },
           tabBarIcon: ({ color }) => (
             <Image
               source={icons.notification}
-              style={{ width: 24, height: 24, tintColor: color }}
+              style={{ width: 28, height: 28, tintColor: color }}
               resizeMode="contain"
             />
           ),
@@ -56,10 +57,11 @@ function MainApp() {
         component={Home}
         options={{
           tabBarLabel: 'Home',
+          tabBarLabelStyle :{ fontSize: 14 },
           tabBarIcon: ({ color }) => (
             <Image
               source={icons.home}
-              style={{ width: 24, height: 24, tintColor: color }}
+              style={{ width: 35, height: 35, tintColor: color }}
               resizeMode="contain"
             />
           ),
@@ -73,10 +75,11 @@ function MainApp() {
         component={Profile}
         options={{
           tabBarLabel: 'Profile',
+          tabBarLabelStyle :{ fontSize: 14 },
           tabBarIcon: ({ color }) => (
             <Image
               source={icons.profile}
-              style={{ width: 24, height: 24, tintColor: color }}
+              style={{ width: 35, height: 35, tintColor: color }}
               resizeMode="contain"
             />
           ),
