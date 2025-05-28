@@ -5,3 +5,5 @@ export { default as EditProfile } from './EditProfile';
 export { default as Ulasan } from './Ulasan';
 export { default as TambahUlasan } from './TambahUlasan';
 export { default as Notification } from './Notification';
+export { default as EditUlasan } from './EditUlasan';
+export { default as UlasanDetail } from './UlasanDetail';

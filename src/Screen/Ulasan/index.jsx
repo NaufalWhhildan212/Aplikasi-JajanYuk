@@ -1,51 +1,107 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image } from 'react-native';
-
-// Import ikon gambar lokal
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import plusIcon from '../../assets/icon/plus.png';
 import backIcon from '../../assets/icon/arrows.png';
+import menuIcon from '../../assets/icon/More.png';
+import { getReviews, deleteReview } from '../../Service/Api';
 
-export default function Ulasan({ navigation, route }) {
-  const [reviews, setReviews] = useState([]); // Data ulasan kosong
+export default function Ulasan({ navigation }) {
+  const [reviews, setReviews] = useState([]);
+  const [selectedMenuId, setSelectedMenuId] = useState(null);
 
-  // Mengambil data ulasan baru yang dikirim dari halaman sebelumnya
   useEffect(() => {
-    if (route.params?.newReview) {
-      setReviews((prevReviews) => [...prevReviews, route.params.newReview]); // Menambahkan ulasan baru
-    }
-  }, [route.params?.newReview]);
+    fetchReviews();
+  }, []);
 
-  const renderItem = ({ item }) => (
-    <View style={styles.reviewCard}>
-      <Text style={styles.reviewer}>{item.name}</Text>
-      <Text style={styles.comment}>{item.comment}</Text>
-      {item.photo && <Image source={{ uri: item.photo }} style={styles.image} />} {/* Menampilkan gambar jika ada */}
-    </View>
-  );
+  const fetchReviews = async () => {
+    try {
+      const data = await getReviews();
+      setReviews(data);
+    } catch (error) {
+      console.error('Gagal memuat ulasan:', error);
+    }
+  };
+
+  const handleEdit = (item) => {
+    navigation.navigate('EditUlasan', { review: item });
+  };
+
+  const handleDelete = (id) => {
+    Alert.alert('Konfirmasi', 'Yakin ingin menghapus ulasan ini?', [
+      { text: 'Batal', style: 'cancel' },
+      {
+        text: 'Hapus',
+        onPress: async () => {
+          try {
+            await deleteReview(id);
+            setReviews((prev) => prev.filter((item) => item.id !== id));
+            setSelectedMenuId(null);
+          } catch (error) {
+            Alert.alert('Gagal', 'Terjadi kesalahan saat menghapus ulasan.');
+            console.log('Gagal hapus:', error);
+          }
+        },
+      },
+    ]);
+  };
+
+  const renderItem = ({ item }) => {
+    const isMenuOpen = selectedMenuId === item.id;
+
+    return (
+      <TouchableOpacity style={styles.reviewCard} onPress={() => navigation.navigate('UlasanDetail', { review: item })}>
+        <View style={styles.headerRow}>
+          <Text style={styles.reviewer}>{item?.Nama ?? 'Tanpa Nama'}</Text>
+          <TouchableOpacity onPress={() => setSelectedMenuId(isMenuOpen ? null : item.id)}>
+            <Image source={menuIcon} style={styles.menuIcon} />
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.comment} numberOfLines={2}>
+          {item?.Ulasan ?? 'Tidak ada komentar'}
+        </Text>
+
+        {item?.Image && (
+          <Image
+            source={{ uri: item.Image }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        )}
+
+        {isMenuOpen && (
+          <View style={styles.menuDropdown}>
+            <TouchableOpacity onPress={() => handleEdit(item)}>
+              <Text style={styles.menuText}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleDelete(item.id)}>
+              <Text style={styles.menuText}>Hapus</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
-      {/* Judul */}
       <Text style={styles.title}>Ulasan Pengguna</Text>
 
-      {/* Tombol Kembali di Bawah Judul */}
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
         <Image source={backIcon} style={styles.backIcon} />
       </TouchableOpacity>
 
-      {/* Daftar Ulasan */}
       {reviews.length === 0 ? (
         <Text style={styles.emptyText}>Belum ada ulasan.</Text>
       ) : (
         <FlatList
           data={reviews}
           renderItem={renderItem}
-          keyExtractor={(item, index) => index.toString()}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={{ paddingBottom: 100 }}
         />
       )}
 
-      {/* Tombol Tambah Ulasan */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate('TambahUlasan')}
@@ -86,6 +142,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 12,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   reviewer: {
     fontWeight: 'bold',
     fontSize: 16,
@@ -99,8 +160,24 @@ const styles = StyleSheet.create({
   image: {
     marginTop: 10,
     width: '100%',
-    height: 200,
+    height: 180,
     borderRadius: 8,
+  },
+  menuIcon: {
+    width: 20,
+    height: 20,
+    tintColor: '#FFA500',
+  },
+  menuDropdown: {
+    marginTop: 10,
+    backgroundColor: '#FFEBCC',
+    borderRadius: 6,
+    padding: 10,
+  },
+  menuText: {
+    fontSize: 14,
+    color: '#333',
+    paddingVertical: 4,
   },
   emptyText: {
     textAlign: 'center',

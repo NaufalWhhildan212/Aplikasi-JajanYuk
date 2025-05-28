@@ -3,7 +3,7 @@ import { Image } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
-  Home,EditProfile,Profile,Restoran,TambahUlasan,Ulasan,Notification,} from '../Screen';
+  Home,EditProfile,Profile,Restoran,TambahUlasan,Ulasan,Notification,EditUlasan,UlasanDetail} from '../Screen';
 import colors from '../Color';
 
 const Tab = createBottomTabNavigator();
@@ -99,6 +99,8 @@ const Router = () => {
       <Stack.Screen name="Ulasan" component={Ulasan} options={{ headerShown: false }} />
       <Stack.Screen name="Restoran" component={Restoran} options={{ headerShown: false }} />
       <Stack.Screen name="Notification" component={Notification} options={{ headerShown: false }} />
+      <Stack.Screen name="EditUlasan" component={EditUlasan} options={{ headerShown: false }} />
+      <Stack.Screen name="UlasanDetail" component={UlasanDetail} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 };
