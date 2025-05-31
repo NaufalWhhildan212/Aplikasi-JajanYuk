@@ -1,26 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import {
+  View, Text, FlatList, TouchableOpacity, StyleSheet,
+  Image, Alert
+} from 'react-native';
 import plusIcon from '../../assets/icon/plus.png';
 import backIcon from '../../assets/icon/arrows.png';
 import menuIcon from '../../assets/icon/More.png';
-import { getReviews, deleteReview } from '../../Service/Api';
+import firestore from '@react-native-firebase/firestore';
 
 export default function Ulasan({ navigation }) {
   const [reviews, setReviews] = useState([]);
   const [selectedMenuId, setSelectedMenuId] = useState(null);
 
   useEffect(() => {
-    fetchReviews();
-  }, []);
+    const unsubscribe = firestore()
+      .collection('reviews')
+      .orderBy('timestamp', 'desc') // PASTIKAN pakai 'timestamp' yang sama
+      .onSnapshot(snapshot => {
+        const data = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setReviews(data);
+      }, error => {
+        console.error('Gagal memuat ulasan:', error);
+      });
 
-  const fetchReviews = async () => {
-    try {
-      const data = await getReviews();
-      setReviews(data);
-    } catch (error) {
-      console.error('Gagal memuat ulasan:', error);
-    }
-  };
+    return () => unsubscribe();
+  }, []);
 
   const handleEdit = (item) => {
     navigation.navigate('EditUlasan', { review: item });
@@ -33,12 +40,11 @@ export default function Ulasan({ navigation }) {
         text: 'Hapus',
         onPress: async () => {
           try {
-            await deleteReview(id);
-            setReviews((prev) => prev.filter((item) => item.id !== id));
+            await firestore().collection('reviews').doc(id).delete();
             setSelectedMenuId(null);
           } catch (error) {
             Alert.alert('Gagal', 'Terjadi kesalahan saat menghapus ulasan.');
-            console.log('Gagal hapus:', error);
+            console.error('Gagal hapus:', error);
           }
         },
       },
@@ -49,7 +55,10 @@ export default function Ulasan({ navigation }) {
     const isMenuOpen = selectedMenuId === item.id;
 
     return (
-      <TouchableOpacity style={styles.reviewCard} onPress={() => navigation.navigate('UlasanDetail', { review: item })}>
+      <TouchableOpacity
+        style={styles.reviewCard}
+        onPress={() => navigation.navigate('UlasanDetail', { review: item })}
+      >
         <View style={styles.headerRow}>
           <Text style={styles.reviewer}>{item?.Nama ?? 'Tanpa Nama'}</Text>
           <TouchableOpacity onPress={() => setSelectedMenuId(isMenuOpen ? null : item.id)}>
@@ -97,7 +106,7 @@ export default function Ulasan({ navigation }) {
         <FlatList
           data={reviews}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingBottom: 100 }}
         />
       )}
@@ -180,26 +189,26 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   emptyText: {
-    textAlign: 'center',
-    color: '#fff',
+    marginTop: 50,
     fontSize: 16,
-    marginTop: 20,
+    color: '#fff',
+    textAlign: 'center',
   },
   fab: {
     position: 'absolute',
-    right: 20,
-    bottom: 30,
+    bottom: 25,
+    right: 25,
     backgroundColor: '#FF6600',
     width: 60,
     height: 60,
     borderRadius: 30,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     elevation: 5,
   },
   fabIcon: {
-    width: 28,
-    height: 28,
+    width: 30,
+    height: 30,
     tintColor: '#fff',
   },
 });

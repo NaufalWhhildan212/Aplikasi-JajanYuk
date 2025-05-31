@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "643781298604",
+    "project_id": "jajanyuk-ebf67",
+    "storage_bucket": "jajanyuk-ebf67.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:643781298604:android:71dae86b98e0d2375c9209",
+        "android_client_info": {
+          "package_name": "com.jajanyuk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUPGHtx86P8LoUl6A5mLLABPS7AVl65HQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

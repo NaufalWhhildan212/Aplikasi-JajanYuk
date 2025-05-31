@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
-import { getReviewById, putReview } from '../../Service/Api'; // pastikan path-nya sesuai
-
+import firestore from '@react-native-firebase/firestore';
+import axios from 'axios';
 import backIcon from '../../assets/icon/arrows.png';
 
 export default function EditReview({ route, navigation }) {
@@ -10,22 +10,13 @@ export default function EditReview({ route, navigation }) {
   const [nama, setNama] = useState('');
   const [ulasan, setUlasan] = useState('');
   const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchReview = async () => {
-      try {
-        const data = await getReviewById(review.id);
-        setNama(data.Nama || '');
-        setUlasan(data.Ulasan || '');
-        setImage(data.Image ? { uri: data.Image } : null);
-      } catch (error) {
-        console.error('Gagal mengambil data ulasan: ', error);
-        Alert.alert('Error', 'Gagal memuat data ulasan.');
-      }
-    };
-
-    fetchReview();
-  }, [review.id]);
+    setNama(review.Nama || '');
+    setUlasan(review.Ulasan || '');
+    setImage(review.Image ? { uri: review.Image } : null);
+  }, [review]);
 
   const handleChooseImage = () => {
     launchImageLibrary({ mediaType: 'photo' }, (response) => {
@@ -42,19 +33,50 @@ export default function EditReview({ route, navigation }) {
       return;
     }
 
-    const updatedData = {
-      Nama: nama,
-      Ulasan: ulasan,
-      Image: image ? image.uri : null,
-    };
+    setLoading(true);
+    let imageUrl = image?.uri || null;
+
+    // Jika gambar dipilih baru (local file), upload dulu ke server
+    if (image && image.fileName) {
+      try {
+        const formData = new FormData();
+        formData.append('file', {
+          uri: image.uri,
+          name: image.fileName,
+          type: image.type || 'image/jpeg',
+        });
+
+        const res = await axios.post(
+          'https://backend-file-praktikum.vercel.app/upload/',
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+
+        if (res.data?.url) {
+          imageUrl = res.data.url;
+        } else {
+          throw new Error('Gagal mendapatkan URL gambar');
+        }
+      } catch (error) {
+        setLoading(false);
+        Alert.alert('Upload Gagal', error.message);
+        return;
+      }
+    }
 
     try {
-      await putReview(review.id, updatedData);
+      await firestore().collection('reviews').doc(review.id).update({
+        Nama: nama,
+        Ulasan: ulasan,
+        Image: imageUrl,
+      });
       Alert.alert('Sukses', 'Ulasan berhasil diperbarui.');
       navigation.goBack();
     } catch (error) {
-      console.error('Gagal mengupdate ulasan:', error);
       Alert.alert('Error', 'Gagal menyimpan perubahan.');
+      console.error('Gagal update:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,14 +106,14 @@ export default function EditReview({ route, navigation }) {
       />
 
       <TouchableOpacity style={styles.photoButton} onPress={handleChooseImage}>
-        <Text style={styles.photoButtonText}>Pilih Gambar</Text>
+        <Text style={styles.photoButtonText}>{image ? 'Ganti Gambar' : 'Pilih Gambar'}</Text>
       </TouchableOpacity>
 
-      {image && (
-        <Image source={{ uri: image.uri }} style={styles.previewImage} />
-      )}
+      {loading && <ActivityIndicator color="#FF6600" />}
 
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+      {image && <Image source={{ uri: image.uri }} style={styles.previewImage} />}
+
+      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
         <Text style={styles.submitText}>Simpan Perubahan</Text>
       </TouchableOpacity>
     </View>
