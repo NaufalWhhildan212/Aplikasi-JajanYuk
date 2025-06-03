@@ -1,187 +1,223 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
-import firestore from '@react-native-firebase/firestore';
+import {
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  Image, Alert, ActivityIndicator, ScrollView
+} from 'react-native';
+import * as ImagePicker from 'react-native-image-picker';
 import axios from 'axios';
-import backIcon from '../../assets/icon/arrows.png';
+import notifee, { AndroidImportance } from '@notifee/react-native';
+import firestore from '@react-native-firebase/firestore';
 
-export default function EditReview({ route, navigation }) {
+export default function EditUlasan({ route, navigation }) {
   const { review } = route.params;
-  const [nama, setNama] = useState('');
-  const [ulasan, setUlasan] = useState('');
-  const [image, setImage] = useState(null);
+
+  const [name, setName] = useState('');
+  const [comment, setComment] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [delay, setDelay] = useState(5); // detik
 
   useEffect(() => {
-    setNama(review.Nama || '');
-    setUlasan(review.Ulasan || '');
-    setImage(review.Image ? { uri: review.Image } : null);
+    if (review) {
+      setName(review.Nama || '');
+      setComment(review.Ulasan || '');
+      setImageUrl(review.Image || '');
+    }
   }, [review]);
 
-  const handleChooseImage = () => {
-    launchImageLibrary({ mediaType: 'photo' }, (response) => {
-      if (response.didCancel || response.errorCode) return;
-      if (response.assets && response.assets.length > 0) {
-        setImage(response.assets[0]);
-      }
+  const handleImagePick = async () => {
+    const result = await ImagePicker.launchImageLibrary({
+      mediaType: 'photo',
+      maxHeight: 800,
+      maxWidth: 800,
     });
-  };
 
-  const handleSubmit = async () => {
-    if (!nama.trim() || !ulasan.trim()) {
-      Alert.alert('Peringatan', 'Nama dan ulasan harus diisi.');
-      return;
-    }
+    if (result.didCancel || !result.assets) return;
 
-    setLoading(true);
-    let imageUrl = image?.uri || null;
-
-    // Jika gambar dipilih baru (local file), upload dulu ke server
-    if (image && image.fileName) {
-      try {
-        const formData = new FormData();
-        formData.append('file', {
-          uri: image.uri,
-          name: image.fileName,
-          type: image.type || 'image/jpeg',
-        });
-
-        const res = await axios.post(
-          'https://backend-file-praktikum.vercel.app/upload/',
-          formData,
-          { headers: { 'Content-Type': 'multipart/form-data' } }
-        );
-
-        if (res.data?.url) {
-          imageUrl = res.data.url;
-        } else {
-          throw new Error('Gagal mendapatkan URL gambar');
-        }
-      } catch (error) {
-        setLoading(false);
-        Alert.alert('Upload Gagal', error.message);
-        return;
-      }
-    }
+    const image = result.assets[0];
+    const formData = new FormData();
+    formData.append('file', {
+      uri: image.uri,
+      name: image.fileName || 'photo.jpg',
+      type: image.type || 'image/jpeg',
+    });
 
     try {
-      await firestore().collection('reviews').doc(review.id).update({
-        Nama: nama,
-        Ulasan: ulasan,
-        Image: imageUrl,
-      });
-      Alert.alert('Sukses', 'Ulasan berhasil diperbarui.');
-      navigation.goBack();
+      setLoading(true);
+      const res = await axios.post(
+        'https://backend-file-praktikum.vercel.app/upload/',
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+      if (res.data && res.data.url) {
+        setImageUrl(res.data.url);
+      } else {
+        Alert.alert('Upload Gagal', 'Gagal mendapatkan URL gambar.');
+      }
     } catch (error) {
-      Alert.alert('Error', 'Gagal menyimpan perubahan.');
-      console.error('Gagal update:', error);
+      Alert.alert('Upload Error', error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Edit Ulasan</Text>
+  const handleSubmit = async () => {
+    if (!name.trim() || !comment.trim()) {
+      Alert.alert('Peringatan', 'Nama dan komentar harus diisi.');
+      return;
+    }
 
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Image source={backIcon} style={styles.backIcon} />
-      </TouchableOpacity>
+    navigation.navigate('Ulasan'); // Navigasi dulu
+
+    setTimeout(async () => {
+      try {
+        await firestore().collection('reviews').doc(review.id).update({
+          Nama: name,
+          Ulasan: comment,
+          Image: imageUrl || null,
+          timestamp: firestore.FieldValue.serverTimestamp(),
+        });
+
+        await notifee.displayNotification({
+          title: 'Ulasan berhasil diperbarui!',
+          body: 'Terima kasih atas perubahannya.',
+          android: {
+            channelId: 'default',
+            importance: AndroidImportance.HIGH,
+          },
+        });
+
+      } catch (error) {
+        console.error('Gagal update ulasan:', error);
+      }
+    }, delay * 1000);
+  };
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
+      <Text style={styles.title}>Edit Ulasan</Text>
 
       <TextInput
         placeholder="Nama Anda"
         placeholderTextColor="#999"
-        value={nama}
-        onChangeText={setNama}
+        value={name}
+        onChangeText={setName}
         style={styles.input}
       />
+
       <TextInput
         placeholder="Komentar Anda"
         placeholderTextColor="#999"
-        value={ulasan}
-        onChangeText={setUlasan}
-        style={[styles.input, styles.textArea]}
+        value={comment}
+        onChangeText={setComment}
+        style={[styles.input, { height: 120 }]}
         multiline
-        numberOfLines={4}
       />
 
-      <TouchableOpacity style={styles.photoButton} onPress={handleChooseImage}>
-        <Text style={styles.photoButtonText}>{image ? 'Ganti Gambar' : 'Pilih Gambar'}</Text>
+      <TouchableOpacity style={styles.uploadButton} onPress={handleImagePick} disabled={loading}>
+        <Text style={styles.uploadText}>{imageUrl ? 'Ganti Gambar' : 'Unggah Gambar'}</Text>
       </TouchableOpacity>
 
-      {loading && <ActivityIndicator color="#FF6600" />}
+      {loading && <ActivityIndicator size="large" color="#FF6600" />}
+      {imageUrl && <Image source={{ uri: imageUrl }} style={styles.previewImage} />}
 
-      {image && <Image source={{ uri: image.uri }} style={styles.previewImage} />}
+      <Text style={styles.delayLabel}>Delay Notifikasi & Simpan Ulasan:</Text>
+      <View style={styles.delayOptions}>
+        {[5, 10, 15].map((d) => (
+          <TouchableOpacity
+            key={d}
+            style={[
+              styles.delayButton,
+              delay === d && styles.delayButtonSelected,
+            ]}
+            onPress={() => setDelay(d)}
+          >
+            <Text style={{ color: delay === d ? '#fff' : '#333' }}>{d} detik</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
-        <Text style={styles.submitText}>Simpan Perubahan</Text>
+      <TouchableOpacity
+        style={[styles.submitButton, loading && { backgroundColor: '#ccc' }]}
+        onPress={handleSubmit}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.submitText}>Simpan Perubahan</Text>
+        )}
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFA500',
-    padding: 16,
+  container: { 
+    flex: 1, 
+    backgroundColor: '#FFA500' },
+  title: { 
+    fontSize: 28, 
+    fontWeight: 'bold', 
+    color: '#fff', 
+    marginBottom: 20, 
+    textAlign: 'center', 
+    marginTop: 10 
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 25,
-    marginBottom: 10,
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 20,
-    width: 40,
-    height: 40,
-  },
-  backIcon: {
-    width: 40,
-    height: 40,
-    tintColor: '#fff',
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
+  input: { 
+    backgroundColor: '#fff', 
+    borderRadius: 8, 
     padding: 12,
-    marginBottom: 16,
-    fontSize: 16,
-    color: '#333',
+    marginBottom: 16, 
+    fontSize: 16, 
+    color: '#333' 
   },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  photoButton: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  photoButtonText: {
-    color: '#FFA500',
-    fontWeight: 'bold',
-  },
-  previewImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  submitButton: {
-    backgroundColor: '#FF6600',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  submitText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  uploadButton: { 
+  backgroundColor: '#fff',
+  borderRadius: 8, 
+  padding: 12, 
+  alignItems: 'center', 
+  marginBottom: 16 
+},
+  uploadText: { 
+  fontSize: 16, 
+  color: '#333' 
+},
+  previewImage: { 
+  width: '100%', 
+  height: 200, 
+  borderRadius: 8, 
+  marginBottom: 20 
+},
+  delayLabel: { 
+  color: '#fff',
+  fontSize: 16, 
+  fontWeight: 'bold', 
+  marginBottom: 8 
+},
+  delayOptions: { 
+  flexDirection: 'row', 
+  justifyContent: 'space-around', 
+  marginBottom: 20 
+},
+  delayButton: { 
+  backgroundColor: '#fff', 
+  paddingHorizontal: 16, 
+  paddingVertical: 10, 
+  borderRadius: 8 
+},
+  delayButtonSelected: { 
+  backgroundColor: '#FF6600' 
+},
+  submitButton: { 
+  backgroundColor: '#FF6600',
+  paddingVertical: 14, 
+  borderRadius: 8, 
+  alignItems: 'center' 
+},
+  submitText: { 
+  color: '#fff', 
+  fontSize: 16, 
+  fontWeight: 'bold' 
+},
 });

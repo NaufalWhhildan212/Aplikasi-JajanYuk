@@ -7,24 +7,46 @@ import plusIcon from '../../assets/icon/plus.png';
 import backIcon from '../../assets/icon/arrows.png';
 import menuIcon from '../../assets/icon/More.png';
 import firestore from '@react-native-firebase/firestore';
+import { useIsFocused } from '@react-navigation/native';
+import notifee, { EventType } from '@notifee/react-native';
 
 export default function Ulasan({ navigation }) {
   const [reviews, setReviews] = useState([]);
   const [selectedMenuId, setSelectedMenuId] = useState(null);
+  const isFocused = useIsFocused();
 
+  const fetchReviews = async () => {
+    try {
+      const snapshot = await firestore()
+        .collection('reviews')
+        .orderBy('timestamp', 'desc')
+        .get();
+
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setReviews(data);
+    } catch (error) {
+      console.error('Gagal memuat ulasan:', error);
+    }
+  };
+
+  // Reload data saat screen focused (pertama buka/ kembali)
   useEffect(() => {
-    const unsubscribe = firestore()
-      .collection('reviews')
-      .orderBy('timestamp', 'desc') // PASTIKAN pakai 'timestamp' yang sama
-      .onSnapshot(snapshot => {
-        const data = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setReviews(data);
-      }, error => {
-        console.error('Gagal memuat ulasan:', error);
-      });
+    if (isFocused) {
+      fetchReviews();
+    }
+  }, [isFocused]);
+
+  // Pas notifikasi lokal muncul, reload data ulasan
+  useEffect(() => {
+    const unsubscribe = notifee.onForegroundEvent(({ type }) => {
+      if (type === EventType.DELIVERED) {
+        fetchReviews();
+      }
+    });
 
     return () => unsubscribe();
   }, []);
@@ -42,6 +64,7 @@ export default function Ulasan({ navigation }) {
           try {
             await firestore().collection('reviews').doc(id).delete();
             setSelectedMenuId(null);
+            fetchReviews();
           } catch (error) {
             Alert.alert('Gagal', 'Terjadi kesalahan saat menghapus ulasan.');
             console.error('Gagal hapus:', error);
